@@ -1,0 +1,25 @@
+{
+  "name": "paystrax",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:checkout": "playwright test tests/checkoutFlow.spec.ts",
+    "test:login": "playwright test tests/loginValidation.spec.ts",
+    "test:chrome": "playwright test --project=\"Google Chrome\"",
+    "test:firefox": "playwright test --project=\"Firefox\"",
+    "test:headed": "playwright test --headed",
+    "typecheck": "tsc --noEmit",
+    "report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "@types/node": "^26.0.0",
+    "typescript": "^6.0.3"
+  }
+}
