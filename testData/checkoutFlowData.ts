@@ -27,6 +27,5 @@ export const productQuantities = {
 export const expectedCartBadgeCount = selectedProducts.length;
 
 export const checkoutMessages = {
-    completePageTitle: 'Checkout: Complete!',
     successMessage: 'Thank you for your order!',
 };

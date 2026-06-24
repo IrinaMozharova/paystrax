@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { formatCentsAsPrice } from '../utils/priceUtils';
+import { escapeRegExp } from '../utils/regexUtils';
 
 export class CartPage {
     readonly page: Page;
@@ -20,7 +22,7 @@ export class CartPage {
     cartItemByName(productName: string): Locator {
         return this.cartItems.filter({
             has: this.page.getByTestId('inventory-item-name').filter({
-                hasText: new RegExp(`^${this.escapeRegExp(productName)}$`),
+                hasText: new RegExp(`^${escapeRegExp(productName)}$`),
             }),
         });
     }
@@ -31,6 +33,10 @@ export class CartPage {
 
     productQuantityByName(productName: string): Locator {
         return this.cartItemByName(productName).getByTestId('item-quantity');
+    }
+
+    productPriceByName(productName: string): Locator {
+        return this.cartItemByName(productName).getByTestId('inventory-item-price');
     }
 
     async expectProductToBeInCart(productName: string): Promise<void> {
@@ -47,6 +53,15 @@ export class CartPage {
         );
     }
 
+    async expectProductPrice(
+        productName: string,
+        expectedPriceInCents: number
+    ): Promise<void> {
+        await expect(this.productPriceByName(productName)).toHaveText(
+            formatCentsAsPrice(expectedPriceInCents)
+        );
+    }
+
     async expectCheckoutButtonToBeAvailable(): Promise<void> {
         await expect(this.checkoutButton).toBeVisible();
         await expect(this.checkoutButton).toBeEnabled();
@@ -56,7 +71,4 @@ export class CartPage {
         await this.checkoutButton.click();
     }
 
-    private escapeRegExp(value: string): string {
-        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
 }

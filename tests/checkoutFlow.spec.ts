@@ -23,6 +23,8 @@ test.describe('Checkout flow', () => {
     const checkoutOverviewPage = new CheckoutOverviewPage(page);
     const checkoutCompletePage = new CheckoutCompletePage(page);
 
+    const selectedProductPrices: Record<string, number> = {};
+
     await test.step('Open login page', async () => {
       await loginPage.open();
       await loginPage.expectOpened();
@@ -33,8 +35,14 @@ test.describe('Checkout flow', () => {
       await productsPage.expectOpened();
     });
 
-    await test.step('Add selected products to cart', async () => {
-      await productsPage.addProductsToCart(selectedProducts);
+    await test.step('Save product prices and add selected products to cart', async () => {
+      for (const productName of selectedProducts) {
+        selectedProductPrices[productName] =
+          await productsPage.getProductPriceInCents(productName);
+
+        await productsPage.addProductToCart(productName);
+      }
+
       await productsPage.expectCartBadgeToHaveCount(expectedCartBadgeCount);
     });
 
@@ -54,6 +62,15 @@ test.describe('Checkout flow', () => {
         await cartPage.expectProductQuantity(
           productName,
           productQuantities[productName]
+        );
+      }
+    });
+
+    await test.step('Verify product prices in cart match products page prices', async () => {
+      for (const productName of selectedProducts) {
+        await cartPage.expectProductPrice(
+          productName,
+          selectedProductPrices[productName]
         );
       }
     });
@@ -82,6 +99,26 @@ test.describe('Checkout flow', () => {
           productQuantities[productName]
         );
       }
+    });
+
+    await test.step('Verify product prices in checkout overview match products page prices', async () => {
+      for (const productName of selectedProducts) {
+        await checkoutOverviewPage.expectProductPrice(
+          productName,
+          selectedProductPrices[productName]
+        );
+      }
+    });
+
+    await test.step('Verify checkout overview subtotal equals sum of selected product prices', async () => {
+      const expectedSubtotalInCents = selectedProducts.reduce(
+        (sum, productName) =>
+          sum +
+          selectedProductPrices[productName] * productQuantities[productName],
+        0
+      );
+
+      await checkoutOverviewPage.expectSubtotalPrice(expectedSubtotalInCents);
     });
 
     await test.step('Finish checkout', async () => {

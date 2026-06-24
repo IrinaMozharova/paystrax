@@ -1,17 +1,19 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { formatCentsAsPrice } from '../utils/priceUtils';
+import { escapeRegExp } from '../utils/regexUtils';
 
 export class CheckoutOverviewPage {
     readonly page: Page;
     readonly overviewHeader: Locator;
     readonly overviewItems: Locator;
-    readonly productNames: Locator;
+    readonly subtotalLabel: Locator;
     readonly finishButton: Locator;
 
     constructor(page: Page) {
         this.page = page;
         this.overviewHeader = page.getByTestId('title');
         this.overviewItems = page.getByTestId('inventory-item');
-        this.productNames = page.getByTestId('inventory-item-name');
+        this.subtotalLabel = page.getByTestId('subtotal-label');
         this.finishButton = page.getByTestId('finish');
     }
 
@@ -22,7 +24,7 @@ export class CheckoutOverviewPage {
     overviewItemByName(productName: string): Locator {
         return this.overviewItems.filter({
             has: this.page.getByTestId('inventory-item-name').filter({
-                hasText: new RegExp(`^${this.escapeRegExp(productName)}$`),
+                hasText: new RegExp(`^${escapeRegExp(productName)}$`),
             }),
         });
     }
@@ -33,6 +35,10 @@ export class CheckoutOverviewPage {
 
     productQuantityByName(productName: string): Locator {
         return this.overviewItemByName(productName).getByTestId('item-quantity');
+    }
+
+    productPriceByName(productName: string): Locator {
+        return this.overviewItemByName(productName).getByTestId('inventory-item-price');
     }
 
     async expectProductToBeInOverview(productName: string): Promise<void> {
@@ -49,16 +55,23 @@ export class CheckoutOverviewPage {
         );
     }
 
-    async expectFinishButtonToBeAvailable(): Promise<void> {
-        await expect(this.finishButton).toBeVisible();
-        await expect(this.finishButton).toBeEnabled();
+    async expectProductPrice(
+        productName: string,
+        expectedPriceInCents: number
+    ): Promise<void> {
+        await expect(this.productPriceByName(productName)).toHaveText(
+            formatCentsAsPrice(expectedPriceInCents)
+        );
+    }
+
+    async expectSubtotalPrice(expectedSubtotalInCents: number): Promise<void> {
+        await expect(this.subtotalLabel).toContainText(
+            formatCentsAsPrice(expectedSubtotalInCents)
+        );
     }
 
     async finishCheckout(): Promise<void> {
         await this.finishButton.click();
     }
 
-    private escapeRegExp(value: string): string {
-        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
 }

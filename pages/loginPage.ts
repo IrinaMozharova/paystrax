@@ -39,4 +39,12 @@ export class LoginPage {
     async expectErrorCloseButtonToBeVisible(): Promise<void> {
         await expect(this.errorCloseButton).toBeVisible();
     }
+
+    async dismissErrorMessage(): Promise<void> {
+        await this.errorCloseButton.click();
+    }
+
+    async expectErrorMessageToBeHidden(): Promise<void> {
+        await expect(this.errorMessage).toBeHidden();
+    }
 }
